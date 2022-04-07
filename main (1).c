@@ -1,15 +1,16 @@
 #include <kipr/wombat.h>
-int forwardSpeed=100;		// speed moving forwards (mm/s)
-int backSpeed=-100;				// speed moving backwards (mm/s)
+int forwardSpeed=200;		// speed moving forwards (mm/s) 
+int backSpeed=-200;				// speed moving backwards (mm/s)
 int interval=10;					// msleep interval in while loop
 int cm = 10;						// mm -> cm
-int lightPort = 4;				// light port
+int lightPort = 2;				// light port
 int clawPort = 3;			 //claw port
 int armPort = 0;             //arm port
 int up;
 int down;
-int open = 630;				// claw open position
-int closed = 1750;			//claw closed position
+int storage;
+int open = 400;				// claw open position
+int closed = 1350;			//claw closed position
 int clawWait = 1000; 	//wait 1 second for claw to change position
 
 void Forward(float distance);								//move forward for certain distance (cm)
@@ -23,37 +24,37 @@ void Arm(int position);											//set arm position
 
 int main()
 {
+    
     wait_for_light(lightPort);													//wait for light before starting
     
-    shut_down_in(115);																//shut down robot 5 secs before game ends
+    shut_down_in(115);					
    
     create_connect();																//connect create
     
 	Claw(open);																			//open claw
     
-	Forward(20);																		// move forwards 10 cm
+    
+	Forward(50);																		// move forwards 50 cm
 	
-	Right(90);																				//turn right 90 degrees
+    Left(90);																			//turn left 90 degrees
     
-    Forward(150);																		// move forwards 150 cm
+    Forward(35);																	//move forwards 35cm
     
-   	Claw(closed);																		//close claw
+    Right(90);																		//turn right 90 degrees
     
-    Arm(up);																			//lift arm
+    msleep(20);		//wait 2 millisec
     
-    Forward(5);																			//move forward so arm is above transporter
+    Forward(65);																	//move forwards 65cm to transporter
     
-    Arm(down);																		//lower arm
+    Claw(closed);																	//close claw
     
-    Claw(open);																			//open claw to drop poms in transporter
+    Right(175);																		//turn around 170 degrees, angled 5 degrees to starting box
     
-    //--------------------------------------------------------------------------------------------------------------------------
+    Forward(110);																	//move forward 110cm to start box
     
-    Backwards(30);																	//drag transporter back 30cm
+    Claw(open);																				//drop poms in starting box
     
-    Left(10);																			//turn left 10 degrees
-    
-    Backwards(150);																	//move back into starting box
+    Backwards(20);																	//back up 20cm
     
     create_disconnect();														//disconnect create
     return 0;
