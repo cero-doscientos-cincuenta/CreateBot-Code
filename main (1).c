@@ -1,17 +1,25 @@
 #include <kipr/wombat.h>
-int forwardSpeed=200;		// speed moving forwards (mm/s) 
-int backSpeed=-200;				// speed moving backwards (mm/s)
+int leftForwardSpeed=200;		// left motor speed moving forwards (mm/s)
+int rightForwardSpeed=200;		// right motor speed moving forwards (mm/s)
+int turnSpeed=150;		//turning speed (mm/s) 
+int leftBackSpeed=-150;				// speed left moving backwards (mm/s)
+int rightBackSpeed=-150;				// speed left moving backwards (mm/s)
 int interval=10;					// msleep interval in while loop
 int cm = 10;						// mm -> cm
-int lightPort = 2;				// light port
-int clawPort = 3;			 //claw port
-int armPort = 0;             //arm port
-int up;
-int down;
-int storage;
-int open = 400;				// claw open position
-int closed = 1350;			//claw closed position
-int clawWait = 1000; 	//wait 1 second for claw to change position
+int rightAngle = 90;				// right angle turn
+int lightPort = 4;					// light port
+int clawPort = 2;				 //claw port
+int armPort = 1;      		       //arm port
+int up = 1600;						//arm up position
+int middle=1450;				//arm middle position
+int down = 1100;					//arm down position	
+int open = 700;					// claw open position
+int closed = 1660;				//claw closed position
+int clawWait = 500; 			//wait half-second for claw to change position
+int leftButton = 8;				//left button from back view
+int rightButton = 1;			//right button from back view
+
+
 
 void Forward(float distance);								//move forward for certain distance (cm)
 void Backwards(float distance);							//move backwards for certain distance (cm)
@@ -19,42 +27,92 @@ void Left(float angle);											//turn left at certain angle (degrees)
 void Right(float angle);										//turn right at certain angle (degrees)
 void Claw(int position);										//set claw position 
 void Arm(int position);											//set arm position
+void BackUntil(float maxDistance);						//back up until both buttons pressed or past max distance
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 int main()
 {
     
-    wait_for_light(lightPort);													//wait for light before starting
+	Claw(open);													//open claw
     
-    shut_down_in(115);					
-   
-    create_connect();																//connect create
+    Arm(middle);
     
-	Claw(open);																			//open claw
+    create_connect();											//connect create
     
+    //wait_for_light(lightPort);								//wait for light before starting
     
-	Forward(50);																		// move forwards 50 cm
-	
-    Left(90);																			//turn left 90 degrees
+    shut_down_in(115);											//shut down robot 5 secs before game ends
     
-    Forward(35);																	//move forwards 35cm
+    BackUntil(40);
     
-    Right(90);																		//turn right 90 degrees
+    Forward(30);												// move forwards 30 cm
     
-    msleep(20);		//wait 2 millisec
+	Forward(35);												// move forwards 35 cm
     
-    Forward(65);																	//move forwards 65cm to transporter
+    Left(rightAngle);											//turn left 90 degrees
     
-    Claw(closed);																	//close claw
+    BackUntil(40);
     
-    Right(175);																		//turn around 170 degrees, angled 5 degrees to starting box
+    Claw(open);
     
-    Forward(110);																	//move forward 110cm to start box
+    Forward(12);													//move forward 12 cm to middle
     
-    Claw(open);																				//drop poms in starting box
+    Arm(down);															//put arm down
     
-    Backwards(20);																	//back up 20cm
+    Forward(33);													//forward 33cm more
+    
+    Claw(closed);
+    
+    Arm(middle);
+    
+	Right(rightAngle);											// turns right to face transporter
+    
+    Forward(6);														//move forward 6cm
+    
+    Claw(open);
+    
+    Arm(down);
+    
+    Forward(77);													//move forwards 77cm to transporter
+    
+   	Claw(closed);													//close claw
+    
+    Arm(middle);													//lift arm to middle level
+    
+    Forward(21);														//move forward 21cm so arm is above transporter
+    
+    Arm(down);															//drop arm to transporter
+    
+   Claw(open);																//release poms to transporter
+    
+    Arm(middle);														
+    
+    msleep(15000);														//wait 15sec for Legobot
+    
+    Left(rightAngle*2);
+    
+    Arm(down);
+    
+    Forward(70);
+    
+    Claw(closed);																						//grab botguy
+    
+    Left(rightAngle*2);
+    
+    BackUntil(70);
+    
+    Forward(5);
+    
+    Right(rightAngle);
+    
+    BackUntil(30);
+    
+    Forward(30);
+    
+    Claw(open);																			//drop botguy into starting box
+    
+    Arm(down);
     
     create_disconnect();														//disconnect create
     return 0;
@@ -62,33 +120,48 @@ int main()
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void Forward(float distance) {																			//move forward x cm
+void Forward(float distance) 
+{																			//move forward x cm
     set_create_distance(0);																			
-    while ((get_create_distance())<(distance*cm)) {
-        create_drive_direct(forwardSpeed,forwardSpeed);
+    while ((get_create_distance())<(distance*cm))
+    {
+        create_drive_direct(leftForwardSpeed,rightForwardSpeed);
         msleep(interval);
-    }}
+    }
+    create_drive_direct(0,0);
+}
 
-void Backwards(float distance) {																			//move backwards x cm
+void Backwards(float distance)
+{																			//move backwards x cm
 	set_create_distance(0);
-    while ((abs((get_create_total_angle())))<(distance*cm)) {
-        create_drive_direct(backSpeed,backSpeed);
+    while ((abs((get_create_total_angle())))<(distance*cm)) 
+    {
+        create_drive_direct(leftBackSpeed,rightBackSpeed);
         msleep(interval);
-    }}
+    }
+}
 
-void Left(float angle) {																			//turn left x degrees
+void Left(float angle)
+{																			//turn left x degrees
     set_create_total_angle(0);
-    while ((get_create_total_angle())<angle) {
-        create_drive_direct(backSpeed,forwardSpeed);
+    while ((get_create_total_angle())<angle) 
+    {
+        create_drive_direct(-turnSpeed,turnSpeed);
         msleep(interval);
-    }}
+    }
+    create_drive_direct(0,0);
+}
 
-void Right(float angle) {																			//turn right x degrees
+void Right(float angle)
+{																			//turn right x degrees
     set_create_total_angle(0);
-    while ((abs((get_create_total_angle())))<angle) {
-        create_drive_direct(forwardSpeed,backSpeed);
+    while ((abs((get_create_total_angle())))<angle) 
+    {
+        create_drive_direct(turnSpeed,-turnSpeed);
         msleep(interval);
-    }}
+    }
+    create_drive_direct(0,0);
+}
 
 void Claw(int position) {																			//change claw's position (open/closed)
     set_servo_position(clawPort,position);
@@ -98,10 +171,25 @@ void Claw(int position) {																			//change claw's position (open/close
    
 }
 
-void Arm(int position) {																			//change claw's position (open/closed)
+void Arm(int position) 
+{																			//change claw's position (open/middle/closed)
+    set_servo_position(armPort,middle);
+    enable_servos();
+    msleep(clawWait);
     set_servo_position(armPort,position);
     enable_servos();
     msleep(clawWait);
     disable_servos();
 }
 
+void BackUntil(float maxDistance)											//back up until both buttons are pressed or max distance is overcome
+{		
+    set_create_distance(0);
+    while ((digital(leftButton) == 0 || digital(rightButton) == 0)&&(abs((get_create_distance())))<(maxDistance*cm)) 
+    {
+        create_drive_direct(leftBackSpeed,rightBackSpeed);
+        msleep(interval);
+    }
+    create_drive_direct(0,0);
+    set_create_distance(0);
+}
